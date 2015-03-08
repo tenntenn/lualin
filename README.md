@@ -1,6 +1,14 @@
 # lualin
 lualin is lua lint.
 
+## Install
+
 ```
-$ cat sample.lua | lualin
+$ go get github.com/tenntenn/lualin
+```
+
+## How to use
+
+```
+$ lualin sample/*.lua
 ```
