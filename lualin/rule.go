@@ -1,14 +1,21 @@
 package lualin
 
 import (
-	"fmt"
 	"regexp"
 
 	"github.com/yuin/gopher-lua/ast"
 )
 
+type RuleLevel int
+
+const (
+	Error RuleLevel = iota
+	Warning
+)
+
 type Rule interface {
 	Validate(l *Lualin, stmt ast.Stmt) error
+	Level() RuleLevel
 }
 
 type RuleFunc func(l *Lualin, stmt ast.Stmt) error
@@ -17,77 +24,15 @@ func (f RuleFunc) Validate(l *Lualin, stmt ast.Stmt) error {
 	return f(l, stmt)
 }
 
-type LocalVarName struct {
-	Regexp *regexp.Regexp
-}
+func matchWhiteList(wl []*regexp.Regexp, str string) bool {
+	if wl == nil {
+		return false
+	}
 
-func (v *LocalVarName) Validate(l *Lualin, stmt ast.Stmt) error {
-
-	errs := []*LintError{}
-	switch stmt.(type) {
-	case *ast.LocalAssignStmt:
-		s, _ := stmt.(*ast.LocalAssignStmt)
-		for i, name := range s.Names {
-			if _, skip := s.Exprs[i].(*ast.FunctionExpr); skip {
-				continue
-			}
-			if !v.Regexp.MatchString(name) {
-				errs = append(errs, &LintError{
-					Line:    s.Line(),
-					Message: fmt.Sprintf("%s is invalid local var name", name),
-				})
-			}
+	for _, w := range wl {
+		if w.MatchString(str) {
+			return true
 		}
 	}
-
-	if len(errs) >= 0 {
-		return LintErrors(errs)
-	}
-	return nil
-}
-
-type GlobalVarName struct {
-	Regexp *regexp.Regexp
-}
-
-func (v *GlobalVarName) Validate(l *Lualin, stmt ast.Stmt) error {
-
-	errs := []*LintError{}
-	switch stmt.(type) {
-	case *ast.AssignStmt:
-		s, _ := stmt.(*ast.AssignStmt)
-		for _, lh := range s.Lhs {
-			if le, ok := lh.(*ast.IdentExpr); ok && !v.Regexp.MatchString(le.Value) {
-				errs = append(errs, &LintError{
-					Line:    s.Line(),
-					Message: fmt.Sprintf("%s is invalid global var name", le.Value),
-				})
-			}
-		}
-	}
-
-	if len(errs) >= 0 {
-		return LintErrors(errs)
-	}
-	return nil
-}
-
-type FuncName struct {
-	Regexp *regexp.Regexp
-}
-
-func (v *FuncName) Validate(l *Lualin, stmt ast.Stmt) error {
-
-	switch stmt.(type) {
-	case *ast.FuncDefStmt:
-		s, _ := stmt.(*ast.FuncDefStmt)
-		if le, ok := s.Name.Func.(*ast.IdentExpr); ok && !v.Regexp.MatchString(le.Value) {
-			return &LintError{
-				Line:    s.Line(),
-				Message: fmt.Sprintf("%s is invalid func name", le.Value),
-			}
-		}
-	}
-
-	return nil
+	return false
 }

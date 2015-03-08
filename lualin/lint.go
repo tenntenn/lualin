@@ -10,12 +10,21 @@ import (
 )
 
 var DefaultRules = []Rule{
-	&LocalVarName{regexp.MustCompile("^[a-z_][a-z0-9_]*$")},
-	&GlobalVarName{regexp.MustCompile("^[A-Z_][A-Z0-9_]*$")},
-	&FuncName{regexp.MustCompile("^[a-z]+([A-Z][a-z0-9]+)*$")},
+	&LocalVarNameRule{
+		Regexp:   regexp.MustCompile("^[a-z_][a-z0-9_]*$"),
+		FuncSkip: true,
+	},
+	&GlobalVarNameRule{
+		Regexp: regexp.MustCompile("^[A-Z_][A-Z0-9_]*$"),
+	},
+	&FuncNameRule{
+		Regexp: regexp.MustCompile("^[a-z]+([A-Z][a-z0-9]+)*$"),
+	},
+	&NoGlobalVarRule{},
 }
 
 type LintError struct {
+	Rule    Rule
 	Line    int
 	Message string
 }
