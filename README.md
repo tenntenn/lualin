@@ -1,2 +1,6 @@
 # lualin
-lua lint
+lualin is lua lint.
+
+```
+$ cat sample.lua | lualin
+```
