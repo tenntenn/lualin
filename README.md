@@ -1,0 +1,2 @@
+# lualin
+lua lint
