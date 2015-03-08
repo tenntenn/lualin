@@ -17,11 +17,40 @@ func (f RuleFunc) Validate(l *Lualin, stmt ast.Stmt) error {
 	return f(l, stmt)
 }
 
-type VarName struct {
+type LocalVarName struct {
 	Regexp *regexp.Regexp
 }
 
-func (v *VarName) Validate(l *Lualin, stmt ast.Stmt) error {
+func (v *LocalVarName) Validate(l *Lualin, stmt ast.Stmt) error {
+
+	errs := []*LintError{}
+	switch stmt.(type) {
+	case *ast.LocalAssignStmt:
+		s, _ := stmt.(*ast.LocalAssignStmt)
+		for i, name := range s.Names {
+			if _, skip := s.Exprs[i].(*ast.FunctionExpr); skip {
+				continue
+			}
+			if !v.Regexp.MatchString(name) {
+				errs = append(errs, &LintError{
+					Line:    s.Line(),
+					Message: fmt.Sprintf("%s is invalid local var name", name),
+				})
+			}
+		}
+	}
+
+	if len(errs) >= 0 {
+		return LintErrors(errs)
+	}
+	return nil
+}
+
+type GlobalVarName struct {
+	Regexp *regexp.Regexp
+}
+
+func (v *GlobalVarName) Validate(l *Lualin, stmt ast.Stmt) error {
 
 	errs := []*LintError{}
 	switch stmt.(type) {
@@ -31,17 +60,7 @@ func (v *VarName) Validate(l *Lualin, stmt ast.Stmt) error {
 			if le, ok := lh.(*ast.IdentExpr); ok && !v.Regexp.MatchString(le.Value) {
 				errs = append(errs, &LintError{
 					Line:    s.Line(),
-					Message: fmt.Sprintf("%s is invalid name", le.Value),
-				})
-			}
-		}
-	case *ast.LocalAssignStmt:
-		s, _ := stmt.(*ast.LocalAssignStmt)
-		for _, name := range s.Names {
-			if !v.Regexp.MatchString(name) {
-				errs = append(errs, &LintError{
-					Line:    s.Line(),
-					Message: fmt.Sprintf("%s is invalid var name", name),
+					Message: fmt.Sprintf("%s is invalid global var name", le.Value),
 				})
 			}
 		}

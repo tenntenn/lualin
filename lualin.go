@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/tenntenn/lualin/lualin"
 	"github.com/yuin/gopher-lua/parse"
-
-	"../../src/lualin"
 )
 
 func main() {

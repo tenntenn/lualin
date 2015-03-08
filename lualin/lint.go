@@ -10,8 +10,9 @@ import (
 )
 
 var DefaultRules = []Rule{
-	&VarName{regexp.MustCompile("[a-z](_[a-z0-9])*")},
-	&FuncName{regexp.MustCompile("[a-z]([A-Z][a-z]+)*")},
+	&LocalVarName{regexp.MustCompile("^[a-z_][a-z0-9_]*$")},
+	&GlobalVarName{regexp.MustCompile("^[A-Z_][A-Z0-9_]*$")},
+	&FuncName{regexp.MustCompile("^[a-z]+([A-Z][a-z0-9]+)*$")},
 }
 
 type LintError struct {
