@@ -21,8 +21,10 @@ func (r *LocalVarNameRule) Validate(l *Lualin, stmt ast.Stmt) error {
 	case *ast.LocalAssignStmt:
 		s, _ := stmt.(*ast.LocalAssignStmt)
 		for i, name := range s.Names {
-			if _, isfunc := s.Exprs[i].(*ast.FunctionExpr); r.FuncSkip && isfunc {
-				continue
+			if len(s.Exprs) > i {
+				if _, isfunc := s.Exprs[i].(*ast.FunctionExpr); r.FuncSkip && isfunc {
+					continue
+				}
 			}
 
 			if matchWhiteList(r.WhiteList, name) {
